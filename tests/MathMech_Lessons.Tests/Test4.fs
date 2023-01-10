@@ -1,4 +1,4 @@
-module Test4
+module Tests4
 
 open FsCheck
 open Expecto
@@ -15,25 +15,25 @@ module SparseVectorTests =
             [ testCase "function square for one element 1"
               <| fun _ ->
                   let actualResult = square [| Some(1) |]
-                  Expect.equal actualResult 1 "The result should be 1"
+                  Expect.equal actualResult 1u "The result should be 1"
 
-              testCase "function square for one element 2"
+              testCase "function square"
               <| fun _ ->
                   let actualResult =
                       square [| Some(11); Some(5); Some(26); Some(2); Some(9); Some(33); Some(4); Some(17); Some(8) |]
 
-                  Expect.equal actualResult 16 "The result should be 16"
+                  Expect.equal actualResult 16u "The result should be 16"
 
               testCase "function square for empty array"
               <| fun _ ->
                   let actualResult = square [||]
-                  Expect.equal actualResult 0 "The result should be 0"
+                  Expect.equal actualResult 0u "The result should be 0"
 
               testProperty "function square property test"
               <| fun (arr: array<Option<int>>) ->
                   Expect.isLessThanOrEqual
                   <| arr.Length
-                  <| square arr
+                  <| Convert.ToInt32(square arr)
                   <| "Square expected less than or equal array length result"
 
               testCase "toBinaryTree for None array"
@@ -56,19 +56,19 @@ module SparseVectorTests =
               testCase "vectorElement for empty array"
               <| fun _ ->
                   let actualResult =
-                      Expect.throws (fun _ -> SparseVector([||])[152] |> ignore) "Index out of the range"
+                      Expect.throws (fun _ -> SparseVector([||])[152u] |> ignore) "Index out of the range"
 
                   actualResult
 
               testProperty "vectorElement property test"
-              <| fun (arr: array<int option>) (i: int) ->
+              <| fun (arr: array<int option>) (i: uint) ->
                   let actualResult = SparseVector arr
                   let i = Random().Next(0, arr.Length)
 
                   if arr.Length = 0 then
                       skiptest |> ignore
                   else
-                      Expect.equal <| arr[i] <| actualResult[i] <| "vectorElement expected same result as Array.get" ]
+                      Expect.equal <| arr[i] <| actualResult[uint i] <| "vectorElement expected same result as Array.get" ]
 
 
 
@@ -82,19 +82,19 @@ module SparseMatrixTests =
             [ testCase "Square for array 2D 1"
               <| fun _ ->
                   let actualResult = square (array2D [ [ Some(1); Some(2) ]; [ Some(3); Some(4) ] ])
-                  Expect.equal actualResult 2 "The result should be 2"
+                  Expect.equal actualResult 2u "The result should be 2"
 
               testCase "Square for array 2D 2"
               <| fun _ ->
                   let actualResult =
                       square (array2D [ [ Some(7); Some(22); Some(3) ]; [ Some(4); Some(51); Some(21) ]; [ Some(3); Some(34); Some(35) ] ])
 
-                  Expect.equal actualResult 4 "The result should be 4"
+                  Expect.equal actualResult 4u "The result should be 4"
 
               testCase "Square for array 2D with one element"
               <| fun _ ->
                   let actualResult = square (array2D [ [ Some(10) ] ])
-                  Expect.equal actualResult 1 "The result should be 1"
+                  Expect.equal actualResult 1u "The result should be 1"
 
               testCase "toQuadTree for empty array 2D"
               <| fun _ ->
@@ -115,7 +115,7 @@ module SparseMatrixTests =
               <| fun (arr: int option[,]) ->
                   Expect.isLessThanOrEqual
                   <| max (Array2D.length1 arr) (Array2D.length2 arr)
-                  <| square arr
+                  <| Convert.ToInt32(square arr)
                   <| "square expected less than or equal array length result"
 
               testProperty "Item from the cell of array2D is equal to item from the cell of SparseMatrix"
@@ -129,11 +129,11 @@ module SparseMatrixTests =
                   else
                       Expect.equal
                       <| arr[i, j]
-                      <| actualResult[i, j]
+                      <| actualResult[uint i, uint j]
                       <| "Item from the cell of array2D should be equal to item from the cell of SparseMatrix" ]
 
 module MultiMatrixTests =
-    open MultiplicationMatrix
+    open MultiMatrix
     open SparseMatrix
     open SparseVector
 
@@ -171,10 +171,10 @@ module MultiMatrixTests =
                   Expect.equal res.Storage BinaryTree.None "The result should be BinaryTree.None"
 
               testProperty "Multiplication property test"
-              <| fun (x: int) (y: int) ->
-                  if x <> 0 && y <> 0 then
-                      let length = abs x
-                      let columns = abs y
+              <| fun (x: uint) (y: uint) ->
+                  if x <> 0u && y <> 0u then
+                      let length = abs (Convert.ToInt32(x))
+                      let columns = abs (Convert.ToInt32(y))
                       let rows = length
 
                       let rnd = System.Random()
@@ -219,7 +219,7 @@ module MultiMatrixTests =
 module PropertyTests =
     open SparseVector
     open SparseMatrix
-    open MultiplicationMatrix
+    open MultiMatrix
 
     let rnd = System.Random()
 
@@ -250,7 +250,7 @@ module PropertyTests =
               <| fun (length: int) ->
                   let vec1, arrOfSome1 = vectorsMaker (abs length)
                   let vec2, arrOfSome2 = vectorsMaker (abs length)
-                  let Result = addVector MultiMatrixTests.funPlusInt vec1 vec2
+                  let actualResult = addVector MultiMatrixTests.funPlusInt vec1 vec2
 
 
                   let naiveSum (arr1: array<int option>) (arr2: array<int option>) =
@@ -258,10 +258,10 @@ module PropertyTests =
 
                   naiveSum
 
-                  Expect.equal Result.Storage
+                  Expect.equal actualResult.Storage
                   <| SparseVector(naiveSum arrOfSome1 arrOfSome2).Storage
                   <| "Results of FAddTree with two vectors should be the same with naive sum"
 
-                  Expect.equal <| BinaryTreeControl Result.Storage <| true <| "Something went wrong"
+                  Expect.equal <| BinaryTreeControl actualResult.Storage <| true <| "Something went wrong"
 
               ]
